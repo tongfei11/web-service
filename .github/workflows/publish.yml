@@ -23,4 +23,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/tongfei11/xboard-node-deploy:latest
+          tags: ghcr.io/tongfei11/web-service:latest
