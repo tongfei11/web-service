@@ -132,6 +132,14 @@ wss.on('connection', (ws) => {
   let pending = [];
   let headerDone = false;
 
+  // Drop the connection if the first VLESS header does not complete
+  // within 10s, so idle clients cannot hold connections open forever.
+  const headerTimer = setTimeout(() => {
+    if (!headerDone) {
+      try { ws.close(); } catch {}
+    }
+  }, 10000);
+
   ws.on('message', (data) => {
     if (!headerDone) {
       chunks.push(data);
@@ -145,6 +153,7 @@ wss.on('connection', (ws) => {
       }
       if (!h) return; // header split across messages; wait for more
       headerDone = true;
+      clearTimeout(headerTimer);
       chunks = [];
       if (!isAuthorized(h.uuid) || h.command !== 1) {
         ws.close();
@@ -179,6 +188,7 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
+    clearTimeout(headerTimer);
     if (socket) socket.destroy();
   });
   ws.on('error', () => {
